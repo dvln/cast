@@ -6,7 +6,6 @@
 package cast
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"reflect"
@@ -14,12 +13,14 @@ import (
 	"strings"
 	"time"
 
-	jww "github.com/spf13/jwalterweatherman"
+	"dvln/lib/out"
 )
 
+// ToTimeE attempts to take what should be a time value (interface)
+// and returns a time.Time if possible otherwise an error
 func ToTimeE(i interface{}) (tim time.Time, err error) {
 	i = indirect(i)
-	jww.DEBUG.Println("ToTimeE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToTimeE called on type:", reflect.TypeOf(i))
 
 	switch s := i.(type) {
 	case time.Time:
@@ -35,9 +36,11 @@ func ToTimeE(i interface{}) (tim time.Time, err error) {
 	}
 }
 
+// ToDurationE attempts to take what should be a duration value (interface)
+// and returns a time.Duration if possible otherwise an error
 func ToDurationE(i interface{}) (d time.Duration, err error) {
 	i = indirect(i)
-	jww.DEBUG.Println("ToDurationE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToDurationE called on type:", reflect.TypeOf(i))
 
 	switch s := i.(type) {
 	case time.Duration:
@@ -51,9 +54,11 @@ func ToDurationE(i interface{}) (d time.Duration, err error) {
 	}
 }
 
+// ToBoolE attempts to take what should be a boolean value (interface)
+// and returns a boolean if possible otherwise an error
 func ToBoolE(i interface{}) (bool, error) {
 	i = indirect(i)
-	jww.DEBUG.Println("ToBoolE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToBoolE called on type:", reflect.TypeOf(i))
 
 	switch b := i.(type) {
 	case bool:
@@ -72,9 +77,11 @@ func ToBoolE(i interface{}) (bool, error) {
 	}
 }
 
+// ToFloat64E attempts to take what should be a float64 value (interface)
+// and returns a float64 if possible otherwise an error
 func ToFloat64E(i interface{}) (float64, error) {
 	i = indirect(i)
-	jww.DEBUG.Println("ToFloat64E called on type:", reflect.TypeOf(i))
+	out.Traceln("ToFloat64E called on type:", reflect.TypeOf(i))
 
 	switch s := i.(type) {
 	case float64:
@@ -95,17 +102,18 @@ func ToFloat64E(i interface{}) (float64, error) {
 		v, err := strconv.ParseFloat(s, 64)
 		if err == nil {
 			return float64(v), nil
-		} else {
-			return 0.0, fmt.Errorf("Unable to Cast %#v to float", i)
 		}
+		return 0.0, fmt.Errorf("Unable to Cast %#v to float", i)
 	default:
 		return 0.0, fmt.Errorf("Unable to Cast %#v to float", i)
 	}
 }
 
+// ToIntE attempts to take what should be an int value (interface)
+// and returns an int if possible otherwise an error
 func ToIntE(i interface{}) (int, error) {
 	i = indirect(i)
-	jww.DEBUG.Println("ToIntE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToIntE called on type:", reflect.TypeOf(i))
 
 	switch s := i.(type) {
 	case int:
@@ -122,17 +130,15 @@ func ToIntE(i interface{}) (int, error) {
 		v, err := strconv.ParseInt(s, 0, 0)
 		if err == nil {
 			return int(v), nil
-		} else {
-			return 0, fmt.Errorf("Unable to Cast %#v to int", i)
 		}
+		return 0, fmt.Errorf("Unable to Cast %#v to int", i)
 	case float64:
 		return int(s), nil
 	case bool:
 		if bool(s) {
 			return 1, nil
-		} else {
-			return 0, nil
 		}
+		return 0, nil
 	case nil:
 		return 0, nil
 	default:
@@ -179,9 +185,11 @@ func indirectToStringerOrError(a interface{}) interface{} {
 	return v.Interface()
 }
 
+// ToStringE attempts to take what should be a string (interface)
+// and returns a string if possible otherwise an error
 func ToStringE(i interface{}) (string, error) {
 	i = indirectToStringerOrError(i)
-	jww.DEBUG.Println("ToStringE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToStringE called on type:", reflect.TypeOf(i))
 
 	switch s := i.(type) {
 	case string:
@@ -205,8 +213,11 @@ func ToStringE(i interface{}) (string, error) {
 	}
 }
 
+// ToStringMapStringE attempts to take what should be a map with string keys and
+// values (given via an interface) and returns a map with string keys and values
+// or an error if that fails
 func ToStringMapStringE(i interface{}) (map[string]string, error) {
-	jww.DEBUG.Println("ToStringMapStringE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToStringMapStringE called on type:", reflect.TypeOf(i))
 
 	var m = map[string]string{}
 
@@ -226,11 +237,13 @@ func ToStringMapStringE(i interface{}) (map[string]string, error) {
 	default:
 		return m, fmt.Errorf("Unable to Cast %#v to map[string]string", i)
 	}
-	return m, fmt.Errorf("Unable to Cast %#v to map[string]string", i)
 }
 
+// ToStringMapBoolE attempts to take what should be a map with string keys and
+// boolean values (given via an interface) and returns a map with string keys and
+// boolean values or an error if that fails
 func ToStringMapBoolE(i interface{}) (map[string]bool, error) {
-	jww.DEBUG.Println("ToStringMapBoolE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToStringMapBoolE called on type:", reflect.TypeOf(i))
 
 	var m = map[string]bool{}
 
@@ -250,11 +263,13 @@ func ToStringMapBoolE(i interface{}) (map[string]bool, error) {
 	default:
 		return m, fmt.Errorf("Unable to Cast %#v to map[string]bool", i)
 	}
-	return m, fmt.Errorf("Unable to Cast %#v to map[string]bool", i)
 }
 
+// ToStringMapE attempts to take what should be a map with string keys and
+// interface value (given via an interface) and returns a map with string
+// keys and interface for the value or an error if that fails
 func ToStringMapE(i interface{}) (map[string]interface{}, error) {
-	jww.DEBUG.Println("ToStringMapE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToStringMapE called on type:", reflect.TypeOf(i))
 
 	var m = map[string]interface{}{}
 
@@ -269,12 +284,12 @@ func ToStringMapE(i interface{}) (map[string]interface{}, error) {
 	default:
 		return m, fmt.Errorf("Unable to Cast %#v to map[string]interface{}", i)
 	}
-
-	return m, fmt.Errorf("Unable to Cast %#v to map[string]interface{}", i)
 }
 
+// ToSliceE attempts to take what should be a slice of interfaces and returns
+// a slice of interfaces or error if an issue arises
 func ToSliceE(i interface{}) ([]interface{}, error) {
-	jww.DEBUG.Println("ToSliceE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToSliceE called on type:", reflect.TypeOf(i))
 
 	var s []interface{}
 
@@ -292,12 +307,12 @@ func ToSliceE(i interface{}) ([]interface{}, error) {
 	default:
 		return s, fmt.Errorf("Unable to Cast %#v of type %v to []interface{}", i, reflect.TypeOf(i))
 	}
-
-	return s, fmt.Errorf("Unable to Cast %#v to []interface{}", i)
 }
 
+// ToStringSliceE attempts to take what should be an array of strings (given
+// via an interface{}) and returns an array of strings or error if cannot cast
 func ToStringSliceE(i interface{}) ([]string, error) {
-	jww.DEBUG.Println("ToStringSliceE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToStringSliceE called on type:", reflect.TypeOf(i))
 
 	var a []string
 
@@ -314,12 +329,12 @@ func ToStringSliceE(i interface{}) ([]string, error) {
 	default:
 		return a, fmt.Errorf("Unable to Cast %#v to []string", i)
 	}
-
-	return a, fmt.Errorf("Unable to Cast %#v to []string", i)
 }
 
+// ToIntSliceE attempts to take what should be an array of ints (given
+// via an interface{}) and returns an array of strings or error if cannot cast
 func ToIntSliceE(i interface{}) ([]int, error) {
-	jww.DEBUG.Println("ToIntSliceE called on type:", reflect.TypeOf(i))
+	out.Traceln("ToIntSliceE called on type:", reflect.TypeOf(i))
 
 	var a []int
 
@@ -334,10 +349,10 @@ func ToIntSliceE(i interface{}) ([]int, error) {
 	default:
 		return a, fmt.Errorf("Unable to Cast %#v to []int", i)
 	}
-
-	return a, fmt.Errorf("Unable to Cast %#v to []int", i)
 }
 
+// StringToDate attempts to take a string that should be a date/time and
+// attempts to convert that to a time.Time and, if failure, returns error
 func StringToDate(s string) (time.Time, error) {
 	return parseDateWith(s, []string{
 		time.RFC3339,
@@ -362,5 +377,5 @@ func parseDateWith(s string, dates []string) (d time.Time, e error) {
 			return
 		}
 	}
-	return d, errors.New(fmt.Sprintf("Unable to parse date: %s", s))
+	return d, fmt.Errorf("Unable to parse date: %s", s)
 }
