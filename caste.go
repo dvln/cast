@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"dvln/lib/out"
+	"github.com/dvln/out"
 )
 
 // ToTimeE attempts to take what should be a time value (interface)
