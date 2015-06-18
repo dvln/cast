@@ -7,10 +7,9 @@ package cast
 
 import (
 	"testing"
-
 	"html/template"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/dvln/testify/assert"
 )
 
 func TestToInt(t *testing.T) {
