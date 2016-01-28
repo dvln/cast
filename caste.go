@@ -14,8 +14,7 @@ import (
 	"time"
 )
 
-// ToTimeE attempts to take what should be a time value (interface)
-// and returns a time.Time if possible otherwise an error
+// ToTimeE casts an empty interface to time.Time.
 func ToTimeE(i interface{}) (tim time.Time, err error) {
 	i = indirect(i)
 	//out.Traceln("ToTimeE called on type:", reflect.TypeOf(i))
@@ -34,8 +33,7 @@ func ToTimeE(i interface{}) (tim time.Time, err error) {
 	}
 }
 
-// ToDurationE attempts to take what should be a duration value (interface)
-// and returns a time.Duration if possible otherwise an error
+// ToDurationE casts an empty interface to time.Duration.
 func ToDurationE(i interface{}) (d time.Duration, err error) {
 	i = indirect(i)
 	//out.Traceln("ToDurationE called on type:", reflect.TypeOf(i))
@@ -43,6 +41,12 @@ func ToDurationE(i interface{}) (d time.Duration, err error) {
 	switch s := i.(type) {
 	case time.Duration:
 		return s, nil
+	case int64:
+		d = time.Duration(s)
+		return
+	case float64:
+		d = time.Duration(s)
+		return
 	case string:
 		d, err = time.ParseDuration(s)
 		return
@@ -52,8 +56,7 @@ func ToDurationE(i interface{}) (d time.Duration, err error) {
 	}
 }
 
-// ToBoolE attempts to take what should be a boolean value (interface)
-// and returns a boolean if possible otherwise an error
+// ToBoolE casts an empty interface to a bool.
 func ToBoolE(i interface{}) (bool, error) {
 	i = indirect(i)
 	//out.Traceln("ToBoolE called on type:", reflect.TypeOf(i))
@@ -75,8 +78,7 @@ func ToBoolE(i interface{}) (bool, error) {
 	}
 }
 
-// ToFloat64E attempts to take what should be a float64 value (interface)
-// and returns a float64 if possible otherwise an error
+// ToFloat64E casts an empty interface to a float64.
 func ToFloat64E(i interface{}) (float64, error) {
 	i = indirect(i)
 	//out.Traceln("ToFloat64E called on type:", reflect.TypeOf(i))
@@ -107,8 +109,7 @@ func ToFloat64E(i interface{}) (float64, error) {
 	}
 }
 
-// ToIntE attempts to take what should be an int value (interface)
-// and returns an int if possible otherwise an error
+// ToIntE casts an empty interface to an int.
 func ToIntE(i interface{}) (int, error) {
 	i = indirect(i)
 	//out.Traceln("ToIntE called on type:", reflect.TypeOf(i))
@@ -183,8 +184,7 @@ func indirectToStringerOrError(a interface{}) interface{} {
 	return v.Interface()
 }
 
-// ToStringE attempts to take what should be a string (interface)
-// and returns a string if possible otherwise an error
+// ToStringE casts an empty interface to a string.
 func ToStringE(i interface{}) (string, error) {
 	i = indirectToStringerOrError(i)
 	//out.Traceln("ToStringE called on type:", reflect.TypeOf(i))
@@ -192,6 +192,8 @@ func ToStringE(i interface{}) (string, error) {
 	switch s := i.(type) {
 	case string:
 		return s, nil
+	case bool:
+		return strconv.FormatBool(s), nil
 	case float64:
 		return strconv.FormatFloat(i.(float64), 'f', -1, 64), nil
 	case int:
@@ -199,6 +201,8 @@ func ToStringE(i interface{}) (string, error) {
 	case []byte:
 		return string(s), nil
 	case template.HTML:
+		return string(s), nil
+	case template.URL:
 		return string(s), nil
 	case nil:
 		return "", nil
@@ -211,35 +215,92 @@ func ToStringE(i interface{}) (string, error) {
 	}
 }
 
-// ToStringMapStringE attempts to take what should be a map with string keys and
-// values (given via an interface) and returns a map with string keys and values
-// or an error if that fails
+// ToStringMapStringE casts an empty interface to a map[string]string.
 func ToStringMapStringE(i interface{}) (map[string]string, error) {
 	//out.Traceln("ToStringMapStringE called on type:", reflect.TypeOf(i))
 
 	var m = map[string]string{}
 
 	switch v := i.(type) {
-	case map[interface{}]interface{}:
-		for k, val := range v {
-			m[ToString(k)] = ToString(val)
-		}
-		return m, nil
+	case map[string]string:
+		return v, nil
 	case map[string]interface{}:
 		for k, val := range v {
 			m[ToString(k)] = ToString(val)
 		}
 		return m, nil
-	case map[string]string:
-		return v, nil
+	case map[interface{}]string:
+		for k, val := range v {
+			m[ToString(k)] = ToString(val)
+		}
+		return m, nil
+	case map[interface{}]interface{}:
+		for k, val := range v {
+			m[ToString(k)] = ToString(val)
+		}
+		return m, nil
 	default:
 		return m, fmt.Errorf("Unable to Cast %#v to map[string]string", i)
 	}
 }
 
-// ToStringMapBoolE attempts to take what should be a map with string keys and
-// boolean values (given via an interface) and returns a map with string keys and
-// boolean values or an error if that fails
+// ToStringMapStringSliceE casts an empty interface to a map[string][]string.
+func ToStringMapStringSliceE(i interface{}) (map[string][]string, error) {
+	// out.Traceln("ToStringMapStringSliceE called on type:", reflect.TypeOf(i))
+
+	var m = map[string][]string{}
+
+	switch v := i.(type) {
+	case map[string][]string:
+		return v, nil
+	case map[string][]interface{}:
+		for k, val := range v {
+			m[ToString(k)] = ToStringSlice(val)
+		}
+		return m, nil
+	case map[string]string:
+		for k, val := range v {
+			m[ToString(k)] = []string{val}
+		}
+	case map[string]interface{}:
+		for k, val := range v {
+			m[ToString(k)] = []string{ToString(val)}
+		}
+		return m, nil
+	case map[interface{}][]string:
+		for k, val := range v {
+			m[ToString(k)] = ToStringSlice(val)
+		}
+		return m, nil
+	case map[interface{}]string:
+		for k, val := range v {
+			m[ToString(k)] = ToStringSlice(val)
+		}
+		return m, nil
+	case map[interface{}][]interface{}:
+		for k, val := range v {
+			m[ToString(k)] = ToStringSlice(val)
+		}
+		return m, nil
+	case map[interface{}]interface{}:
+		for k, val := range v {
+			key, err := ToStringE(k)
+			if err != nil {
+				return m, fmt.Errorf("Unable to Cast %#v to map[string][]string", i)
+			}
+			value, err := ToStringSliceE(val)
+			if err != nil {
+				return m, fmt.Errorf("Unable to Cast %#v to map[string][]string", i)
+			}
+			m[key] = value
+		}
+	default:
+		return m, fmt.Errorf("Unable to Cast %#v to map[string][]string", i)
+	}
+	return m, nil
+}
+
+// ToStringMapBoolE casts an empty interface to a map[string]bool.
 func ToStringMapBoolE(i interface{}) (map[string]bool, error) {
 	//out.Traceln("ToStringMapBoolE called on type:", reflect.TypeOf(i))
 
@@ -263,9 +324,7 @@ func ToStringMapBoolE(i interface{}) (map[string]bool, error) {
 	}
 }
 
-// ToStringMapE attempts to take what should be a map with string keys and
-// interface value (given via an interface) and returns a map with string
-// keys and interface for the value or an error if that fails
+// ToStringMapE casts an empty interface to a map[string]interface{}.
 func ToStringMapE(i interface{}) (map[string]interface{}, error) {
 	//out.Traceln("ToStringMapE called on type:", reflect.TypeOf(i))
 
@@ -284,8 +343,7 @@ func ToStringMapE(i interface{}) (map[string]interface{}, error) {
 	}
 }
 
-// ToSliceE attempts to take what should be a slice of interfaces and returns
-// a slice of interfaces or error if an issue arises
+// ToSliceE casts an empty interface to a []interface{}.
 func ToSliceE(i interface{}) ([]interface{}, error) {
 	//out.Traceln("ToSliceE called on type:", reflect.TypeOf(i))
 
@@ -307,8 +365,7 @@ func ToSliceE(i interface{}) ([]interface{}, error) {
 	}
 }
 
-// ToStringSliceE attempts to take what should be an array of strings (given
-// via an interface{}) and returns an array of strings or error if cannot cast
+// ToStringSliceE casts an empty interface to a []string.
 func ToStringSliceE(i interface{}) ([]string, error) {
 	//out.Traceln("ToStringSliceE called on type:", reflect.TypeOf(i))
 
@@ -324,13 +381,18 @@ func ToStringSliceE(i interface{}) ([]string, error) {
 		return v, nil
 	case string:
 		return strings.Fields(v), nil
+	case interface{}:
+		str, err := ToStringE(v)
+		if err != nil {
+			return a, fmt.Errorf("Unable to Cast %#v to []string", i)
+		}
+		return []string{str}, nil
 	default:
 		return a, fmt.Errorf("Unable to Cast %#v to []string", i)
 	}
 }
 
-// ToIntSliceE attempts to take what should be an array of ints (given
-// via an interface{}) and returns an array of strings or error if cannot cast
+// ToIntSliceE casts an empty interface to a []int.
 func ToIntSliceE(i interface{}) ([]int, error) {
 	//out.Traceln("ToIntSliceE called on type:", reflect.TypeOf(i))
 
@@ -361,8 +423,7 @@ func ToIntSliceE(i interface{}) ([]int, error) {
 	}
 }
 
-// StringToDate attempts to take a string that should be a date/time and
-// attempts to convert that to a time.Time and, if failure, returns error
+// StringToDate casts an empty interface to a time.Time.
 func StringToDate(s string) (time.Time, error) {
 	return parseDateWith(s, []string{
 		time.RFC3339,
@@ -378,6 +439,8 @@ func StringToDate(s string) (time.Time, error) {
 		"02 Jan 06 15:04 MST",
 		"2006-01-02",
 		"02 Jan 2006",
+		"2006-01-02 15:04:05 -07:00",
+		"2006-01-02 15:04:05 -0700",
 	})
 }
 

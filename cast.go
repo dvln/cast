@@ -59,6 +59,12 @@ func ToStringMapString(i interface{}) map[string]string {
 	return v
 }
 
+// eriknow... this came in but not sure if needed
+func ToStringMapStringSlice(i interface{}) map[string][]string {
+	v, _ := ToStringMapStringSliceE(i)
+	return v
+}
+
 // ToStringMapBool attempts to cast an interface{} into what should be a map
 // of string keys and boolean values, if you want to detect an error use
 // ToStringMapBoolE() directly
