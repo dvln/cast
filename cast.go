@@ -37,6 +37,13 @@ func ToFloat64(i interface{}) float64 {
 	return v
 }
 
+// ToInt64 attempts to cast an interface into what should be an int64,
+// if you want to check for errors use ToInt64E() instead
+func ToInt64(i interface{}) int64 {
+	v, _ := ToInt64E(i)
+	return v
+}
+
 // ToInt attempts to cast an interface into what should be an int,
 // if you want to check for errors use ToIntE() instead
 func ToInt(i interface{}) int {
@@ -85,6 +92,13 @@ func ToStringMap(i interface{}) map[string]interface{} {
 // interface{}, if you want to detect an error use ToSliceE() directly
 func ToSlice(i interface{}) []interface{} {
 	v, _ := ToSliceE(i)
+	return v
+}
+
+// ToBoolSlice casts an interface{} into what should be an array of
+// booleans, if you want to detect an error use ToBoolSliceE() directly
+func ToBoolSlice(i interface{}) []bool {
+	v, _ := ToBoolSliceE(i)
 	return v
 }
 
